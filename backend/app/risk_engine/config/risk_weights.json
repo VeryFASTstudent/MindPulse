@@ -1,0 +1,12 @@
+{
+  "sentiment_deviation": 0.30,
+  "stress_deviation": 0.25,
+  "workload_deviation": 0.15,
+  "sleep_deviation": 0.15,
+  "engagement_deviation": 0.15,
+  "thresholds": {
+    "low_max": 0.35,
+    "medium_max": 0.65
+  },
+  "min_consecutive_days": 3
+}

@@ -1,0 +1,32 @@
+name: mindpulse
+description: MindPulse - AI-driven student well-being support system (mobile app)
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.6
+
+  # State management -- ChangeNotifier + Provider is the simplest option
+  # that's still idiomatic Flutter, appropriate for an FYP team's timeline
+  # (Riverpod/Bloc add more ceremony than this project needs).
+  provider: ^6.1.2
+
+  # HTTP client for talking to the FastAPI backend.
+  http: ^1.2.2
+
+  # Secure on-device storage for JWT access/refresh tokens.
+  # (SharedPreferences is not encrypted -- tokens shouldn't live there.)
+  flutter_secure_storage: ^9.2.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true

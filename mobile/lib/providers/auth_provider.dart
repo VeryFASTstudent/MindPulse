@@ -40,6 +40,9 @@ class AuthProvider extends ChangeNotifier {
     } on ApiException catch (e) {
       errorMessage = e.message;
       return false;
+    } catch (_) {
+      errorMessage = 'Could not connect to MindPulse. Check that the backend is running and try again.';
+      return false;
     } finally {
       isLoading = false;
       notifyListeners();
@@ -74,6 +77,11 @@ class AuthProvider extends ChangeNotifier {
       return await login(email, password);
     } on ApiException catch (e) {
       errorMessage = e.message;
+      isLoading = false;
+      notifyListeners();
+      return false;
+    } catch (_) {
+      errorMessage = 'Could not connect to MindPulse. Check that the backend is running and try again.';
       isLoading = false;
       notifyListeners();
       return false;

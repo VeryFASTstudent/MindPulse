@@ -12,7 +12,7 @@ blueprint (Section 10: parents/admins never see raw conversations).
 """
 
 from bson import ObjectId
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, BackgroundTasks, Depends
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from app.auth.dependencies import require_role
@@ -20,6 +20,7 @@ from app.chat.schemas import ChatMessageRequest, ChatReplyResponse, MessageOut, 
 from app.chat.service import handle_student_message
 from app.core.exceptions import ForbiddenError, NotFoundError
 from app.db.mongodb import get_database
+from app.sentiment.service import process_student_message
 
 router = APIRouter()
 
@@ -27,10 +28,14 @@ router = APIRouter()
 @router.post("/message", response_model=ChatReplyResponse)
 async def send_message(
     data: ChatMessageRequest,
+    background_tasks: BackgroundTasks,
     user: dict = Depends(require_role(["student"])),
     db: AsyncIOMotorDatabase = Depends(get_database),
 ):
     student_message, assistant_message = await handle_student_message(db, user["_id"], data.text)
+    # Signal extraction (sentiment + chat behavior) runs AFTER the response
+    # is sent, so it can never slow down or break the chat itself.
+    background_tasks.add_task(process_student_message, db, student_message)
     return ChatReplyResponse(
         session_id=str(student_message["session_id"]),
         student_message=student_message,

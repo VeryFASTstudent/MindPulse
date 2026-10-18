@@ -3,10 +3,59 @@ import 'package:provider/provider.dart';
 
 import '../../core/routes.dart';
 import '../../core/theme.dart';
+import '../../models/consent_model.dart';
 import '../../providers/auth_provider.dart';
+import '../../services/consent_service.dart';
 
-class ProfileTab extends StatelessWidget {
+class ProfileTab extends StatefulWidget {
   const ProfileTab({super.key});
+
+  @override
+  State<ProfileTab> createState() => _ProfileTabState();
+}
+
+class _ProfileTabState extends State<ProfileTab> {
+  final ConsentService _consentService = ConsentService();
+  ConsentModel? _consent;
+  bool _isLoadingConsent = true;
+  bool _isSavingConsent = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadConsent();
+  }
+
+  Future<void> _loadConsent() async {
+    try {
+      final consent = await _consentService.getMine();
+      if (mounted) setState(() => _consent = consent);
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not load privacy settings: $error')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoadingConsent = false);
+    }
+  }
+
+  Future<void> _saveConsent(ConsentModel updated) async {
+    setState(() => _isSavingConsent = true);
+    try {
+      final saved = await _consentService.updateMine(updated);
+      if (mounted) setState(() => _consent = saved);
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Privacy settings were not saved: $error')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSavingConsent = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,13 +91,57 @@ class ProfileTab extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
+          const SizedBox(height: 12),
           Card(
-            child: ListTile(
-              leading: const Icon(Icons.privacy_tip_outlined),
-              title: const Text('Consent settings'),
-              subtitle: const Text('Available starting Phase 9'),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: null,
+            child: Column(
+              children: [
+                const ListTile(
+                  leading: Icon(Icons.privacy_tip_outlined),
+                  title: Text('Privacy & sharing'),
+                  subtitle: Text('Sharing is off unless you turn it on.'),
+                ),
+                if (_isLoadingConsent)
+                  const Padding(
+                    padding: EdgeInsets.all(20),
+                    child: CircularProgressIndicator(),
+                  )
+                else if (_consent != null) ...[
+                  SwitchListTile(
+                    title: const Text('Share summary with parent'),
+                    subtitle: const Text('Allow a linked parent to see well-being summaries.'),
+                    value: _consent!.shareSummaryWithParent,
+                    onChanged: _isSavingConsent
+                        ? null
+                        : (value) => _saveConsent(
+                              _consent!.copyWith(shareSummaryWithParent: value),
+                            ),
+                  ),
+                  SwitchListTile(
+                    title: const Text('Share with university support'),
+                    subtitle: const Text('Allow authorized support staff to see your summary.'),
+                    value: _consent!.shareWithUniversitySupport,
+                    onChanged: _isSavingConsent
+                        ? null
+                        : (value) => _saveConsent(
+                              _consent!.copyWith(shareWithUniversitySupport: value),
+                            ),
+                  ),
+                  SwitchListTile(
+                    title: const Text('Share data for referrals'),
+                    subtitle: const Text('Allow your summary to accompany a referral request.'),
+                    value: _consent!.allowReferralDataShare,
+                    onChanged: _isSavingConsent
+                        ? null
+                        : (value) => _saveConsent(
+                              _consent!.copyWith(allowReferralDataShare: value),
+                            ),
+                  ),
+                ] else
+                  const ListTile(
+                    title: Text('Privacy settings unavailable'),
+                    subtitle: Text('Check your connection and reopen Profile to try again.'),
+                  ),
+              ],
             ),
           ),
           const SizedBox(height: 32),

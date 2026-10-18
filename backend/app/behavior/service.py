@@ -62,13 +62,17 @@ async def submit_checkin(db: AsyncIOMotorDatabase, student_id: ObjectId, data: C
 
 async def get_today_checkin(db: AsyncIOMotorDatabase, student_id: ObjectId) -> dict | None:
     today = _today_utc_midnight()
-    return await db.behavioral_signals.find_one({"student_id": student_id, "date": today})
+    # Since Phase 6 the chat pipeline can create today's row before the
+    # student checks in, so only a row with checkin_completed counts here.
+    return await db.behavioral_signals.find_one(
+        {"student_id": student_id, "date": today, "checkin_completed": True}
+    )
 
 
 async def get_history(db: AsyncIOMotorDatabase, student_id: ObjectId, days: int = 7) -> list[dict]:
     since = _today_utc_midnight() - timedelta(days=days - 1)
     cursor = db.behavioral_signals.find(
-        {"student_id": student_id, "date": {"$gte": since}}
+        {"student_id": student_id, "date": {"$gte": since}, "checkin_completed": True}
     ).sort("date", 1)
     return await cursor.to_list(length=days)
 

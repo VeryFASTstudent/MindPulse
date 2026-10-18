@@ -25,8 +25,14 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 30
     refresh_token_expire_days: int = 7
 
-    # --- AI (wired up in Phase 4/6) ---
+    # --- AI ---
     openai_api_key: str = ""
+
+    # --- Sentiment analysis (Phase 6) ---
+    # Set SENTIMENT_ENABLED=false to skip the local model entirely
+    # (useful on a low-RAM machine or while developing other features).
+    sentiment_enabled: bool = True
+    sentiment_model_name: str = "j-hartmann/emotion-english-distilroberta-base"
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 

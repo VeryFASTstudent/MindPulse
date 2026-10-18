@@ -24,6 +24,8 @@ class ApiConstants {
   static const String checkinToday = '$apiBaseUrl/behavior/checkin/today';
   static const String checkinStreak = '$apiBaseUrl/behavior/streak';
   static String checkinHistory(int days) => '$apiBaseUrl/behavior/history?days=$days';
+  static const String riskStatus = '$apiBaseUrl/risk/status';
+  static const String myConsent = '$apiBaseUrl/consent/me';
 }
 
 /// Keys used for secure token storage. Centralized so no other file needs

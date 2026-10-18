@@ -5,26 +5,36 @@
 // gestures. You can also use WidgetTester to find child widgets in the widget
 // tree, read text, and verify that the values of widget properties are correct.
 
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:mindpulse/main.dart';
+import 'package:mindpulse/models/consent_model.dart';
+import 'package:mindpulse/models/risk_status_model.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  test('consent model updates a single permission', () {
+    const consent = ConsentModel(
+      shareSummaryWithParent: false,
+      shareWithUniversitySupport: false,
+      allowReferralDataShare: false,
+    );
+    final updated = consent.copyWith(shareSummaryWithParent: true);
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    expect(updated.shareSummaryWithParent, isTrue);
+    expect(updated.shareWithUniversitySupport, isFalse);
+    expect(updated.allowReferralDataShare, isFalse);
+    expect(ConsentModel.fromJson(consent.toJson()).shareSummaryWithParent, isFalse);
+  });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+  test('risk status model represents a student awaiting their first check-in', () {
+    final status = RiskStatusModel.fromJson({
+      'status': 'awaiting_checkin',
+      'risk_level': 'INSUFFICIENT_DATA',
+      'message': "Complete today's check-in to see your well-being status.",
+    });
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(status.status, 'awaiting_checkin');
+    expect(status.riskLevel, 'INSUFFICIENT_DATA');
+    expect(status.requiredSampleSize, 5);
+    expect(status.weightedScore, isNull);
   });
 }

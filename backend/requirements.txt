@@ -11,3 +11,7 @@ bcrypt==4.0.1
 python-jose[cryptography]==3.3.0
 python-multipart==0.0.9
 openai==1.109.1
+
+# Sentiment analysis (Phase 6). torch is large (~200 MB on Windows/macOS).
+transformers>=4.40
+torch>=2.3

@@ -3,14 +3,14 @@ import 'package:provider/provider.dart';
 
 import '../../core/theme.dart';
 import '../../models/checkin_model.dart';
+import '../../models/risk_status_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/behavior_service.dart';
+import '../../services/risk_service.dart';
 import '../checkin/checkin_screen.dart';
 
 /// As of Phase 5, the check-in card is wired to real data (today's check-in
-/// status + streak). The well-being STATUS card at the top stays a
-/// placeholder until the risk engine exists (Phase 8) -- there's simply no
-/// risk score to show yet.
+/// status + streak) and a consent-independent student-only risk status.
 class DashboardTab extends StatefulWidget {
   const DashboardTab({super.key});
 
@@ -20,8 +20,10 @@ class DashboardTab extends StatefulWidget {
 
 class _DashboardTabState extends State<DashboardTab> {
   final BehaviorService _behaviorService = BehaviorService();
+  final RiskService _riskService = RiskService();
 
   CheckinModel? _todayCheckin;
+  RiskStatusModel? _riskStatus;
   int _streak = 0;
   bool _isLoading = true;
 
@@ -37,11 +39,13 @@ class _DashboardTabState extends State<DashboardTab> {
       final results = await Future.wait([
         _behaviorService.getTodayCheckin(),
         _behaviorService.getStreak(),
+        _riskService.getStatus(),
       ]);
       if (!mounted) return;
       setState(() {
         _todayCheckin = results[0] as CheckinModel?;
         _streak = results[1] as int;
+        _riskStatus = results[2] as RiskStatusModel;
       });
     } catch (_) {
       // Dashboard degrades gracefully -- if this fails (e.g. backend
@@ -81,7 +85,7 @@ class _DashboardTabState extends State<DashboardTab> {
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
               const SizedBox(height: 24),
-              const _StatusCard(),
+              _StatusCard(status: _riskStatus, isLoading: _isLoading),
               const SizedBox(height: 16),
               Row(
                 children: [
@@ -172,10 +176,27 @@ class _CheckinCard extends StatelessWidget {
 }
 
 class _StatusCard extends StatelessWidget {
-  const _StatusCard();
+  final RiskStatusModel? status;
+  final bool isLoading;
+
+  const _StatusCard({required this.status, required this.isLoading});
 
   @override
   Widget build(BuildContext context) {
+    final title = switch (status?.status) {
+      'awaiting_checkin' => 'Check in to get started',
+      'insufficient_data' => 'Building your baseline',
+      'monitoring' => 'Monitoring your well-being',
+      'sustained' => '${status!.riskLevel} pattern sustained',
+      _ => isLoading ? 'Loading your status' : 'Status unavailable',
+    };
+    final description = status?.message ??
+        (isLoading ? 'Your latest signals are being loaded.' : 'Pull down to refresh your status.');
+    final currentStatus = status;
+    final detail = currentStatus == null || currentStatus.weightedScore == null
+      ? null
+      : 'Observed ${currentStatus.observedLevel} · score ${(currentStatus.weightedScore! * 100).round()}% · ${currentStatus.consecutiveDaysAtLevel} consecutive days';
+
     return Card(
       child: Container(
         width: double.infinity,
@@ -188,20 +209,24 @@ class _StatusCard extends StatelessWidget {
             end: Alignment.bottomRight,
           ),
         ),
-        child: const Column(
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Well-being status', style: TextStyle(color: Colors.white70, fontSize: 13)),
-            SizedBox(height: 6),
+            const Text('Well-being status', style: TextStyle(color: Colors.white70, fontSize: 13)),
+            const SizedBox(height: 6),
             Text(
-              'Not enough data yet',
-              style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+              title,
+              style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
             ),
-            SizedBox(height: 6),
+            const SizedBox(height: 6),
             Text(
-              'Your status appears once the risk engine is connected (Phase 8).',
-              style: TextStyle(color: Colors.white70, fontSize: 13),
+              description,
+              style: const TextStyle(color: Colors.white70, fontSize: 13),
             ),
+            if (detail != null) ...[
+              const SizedBox(height: 8),
+              Text(detail, style: const TextStyle(color: Colors.white70, fontSize: 12)),
+            ],
           ],
         ),
       ),

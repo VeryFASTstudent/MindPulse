@@ -58,7 +58,12 @@ async def get_or_create_active_session(db: AsyncIOMotorDatabase, student_id: Obj
 
 
 async def save_message(
-    db: AsyncIOMotorDatabase, session_id: ObjectId, student_id: ObjectId, sender: str, text: str
+    db: AsyncIOMotorDatabase,
+    session_id: ObjectId,
+    student_id: ObjectId,
+    sender: str,
+    text: str,
+    response_mode: str | None = None,
 ) -> dict:
     doc = {
         "session_id": session_id,
@@ -67,6 +72,8 @@ async def save_message(
         "text": text,
         "created_at": datetime.now(timezone.utc),
     }
+    if response_mode is not None:
+        doc["response_mode"] = response_mode
     result = await db.messages.insert_one(doc)
     doc["_id"] = result.inserted_id
     await db.chat_sessions.update_one(
@@ -84,7 +91,7 @@ async def get_recent_history(db: AsyncIOMotorDatabase, session_id: ObjectId, lim
 
 async def handle_student_message(
     db: AsyncIOMotorDatabase, student_id: ObjectId, text: str
-) -> tuple[dict, dict]:
+) -> tuple[dict, dict, str]:
     session = await get_or_create_active_session(db, student_id)
     student_message = await save_message(db, session["_id"], student_id, "student", text)
 
@@ -94,7 +101,14 @@ async def handle_student_message(
         for m in history_docs
     ]
 
-    reply_text = await generate_chat_reply(conversation)
-    assistant_message = await save_message(db, session["_id"], student_id, "assistant", reply_text)
+    reply_text, response_mode = await generate_chat_reply(conversation)
+    assistant_message = await save_message(
+        db,
+        session["_id"],
+        student_id,
+        "assistant",
+        reply_text,
+        response_mode=response_mode,
+    )
 
-    return student_message, assistant_message
+    return student_message, assistant_message, response_mode

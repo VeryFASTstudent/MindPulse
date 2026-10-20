@@ -7,7 +7,14 @@ from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from app.baseline.service import build_baseline, day_key
-from app.risk_engine.scoring import RISK_CONFIG, consecutive_days_at_level, score_risk
+from app.dashboards.admin_service import get_risk_configuration
+from app.escalations.service import create_sustained_escalations
+from app.risk_engine.scoring import (
+    RISK_CONFIG,
+    consecutive_days_at_level,
+    score_risk,
+    smooth_risk_score,
+)
 
 BASELINE_WINDOW_DAYS = 21
 MIN_BASELINE_DAYS = 5
@@ -34,6 +41,8 @@ def _signal_values(row: dict[str, Any], sentiment_by_day: dict[date, list[float]
 
 
 async def get_risk_status(db: AsyncIOMotorDatabase, student_id: ObjectId) -> dict[str, Any]:
+    configuration = await get_risk_configuration(db)
+    min_consecutive_days = int(configuration["min_consecutive_days"])
     today = _today_utc()
     start = today - timedelta(days=BASELINE_WINDOW_DAYS - 1)
     rows = await db.behavioral_signals.find(
@@ -91,9 +100,23 @@ async def get_risk_status(db: AsyncIOMotorDatabase, student_id: ObjectId) -> dic
         if len(prior) < MIN_BASELINE_DAYS:
             continue
         daily_baseline = build_baseline(prior, sentiments_by_day)
-        daily_result = score_risk(_signal_values(row, sentiments_by_day), daily_baseline)
+        daily_result = score_risk(
+            _signal_values(row, sentiments_by_day),
+            daily_baseline,
+            configuration,
+        )
         if daily_result is None:
             continue
+        recent_scores = [
+            item.get("raw_weighted_score", item["weighted_score"])
+            for item in scored_days[-2:]
+        ]
+        smoothed_result = smooth_risk_score(
+            recent_scores,
+            daily_result["weighted_score"],
+            configuration,
+        )
+        daily_result.update(smoothed_result)
         day = day_key(row["date"])
         saved = {
             **daily_result,
@@ -120,7 +143,17 @@ async def get_risk_status(db: AsyncIOMotorDatabase, student_id: ObjectId) -> dic
 
     consecutive = consecutive_days_at_level(scored_days, today, current["risk_level"])
 
-    sustained = consecutive >= MIN_CONSECUTIVE_DAYS
+    sustained = consecutive >= min_consecutive_days
+    escalation_sent = False
+    if current["risk_level"] == "HIGH" and sustained:
+        trigger_date = today - timedelta(days=consecutive - min_consecutive_days)
+        escalation_sent = await create_sustained_escalations(
+            db,
+            student_id,
+            trigger_date,
+            consecutive,
+        )
+
     return {
         "status": "sustained" if sustained else "monitoring",
         "risk_level": current["risk_level"] if sustained else "MONITORING",
@@ -130,6 +163,7 @@ async def get_risk_status(db: AsyncIOMotorDatabase, student_id: ObjectId) -> dic
         "sample_size": baseline["sample_size"],
         "required_sample_size": MIN_BASELINE_DAYS,
         "raw_components": current["raw_components"],
+        "escalation_sent": escalation_sent,
         "message": (
             f"Your {current['risk_level'].lower()} pattern has continued for {consecutive} days."
             if sustained

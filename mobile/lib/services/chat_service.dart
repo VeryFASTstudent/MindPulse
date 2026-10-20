@@ -38,10 +38,38 @@ class ChatService {
     ];
   }
 
+  Future<List<ChatMessage>> getRecentMessages() async {
+    final sessionsResponse = await http.get(
+      Uri.parse('${ApiConstants.apiBaseUrl}/chat/sessions'),
+      headers: await _authHeaders(),
+    );
+    if (sessionsResponse.statusCode != 200) {
+      throw ApiException(
+          sessionsResponse.statusCode, _extractDetail(sessionsResponse));
+    }
+
+    final sessions = jsonDecode(sessionsResponse.body) as List<dynamic>;
+    if (sessions.isEmpty) return [];
+    final sessionId = (sessions.first as Map<String, dynamic>)['_id'] as String;
+    final messagesResponse = await http.get(
+      Uri.parse('${ApiConstants.apiBaseUrl}/chat/sessions/$sessionId/messages'),
+      headers: await _authHeaders(),
+    );
+    if (messagesResponse.statusCode != 200) {
+      throw ApiException(
+          messagesResponse.statusCode, _extractDetail(messagesResponse));
+    }
+    final messages = jsonDecode(messagesResponse.body) as List<dynamic>;
+    return messages
+        .map((item) => ChatMessage.fromJson(item as Map<String, dynamic>))
+        .toList();
+  }
+
   String _extractDetail(http.Response response) {
     try {
       final body = jsonDecode(response.body);
-      return body['detail']?.toString() ?? 'Something went wrong. Please try again.';
+      return body['detail']?.toString() ??
+          'Something went wrong. Please try again.';
     } catch (_) {
       return 'Something went wrong. Please try again.';
     }

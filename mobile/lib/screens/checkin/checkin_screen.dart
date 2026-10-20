@@ -35,7 +35,17 @@ class _CheckinScreenState extends State<CheckinScreen> {
       if (mounted) Navigator.of(context).pop(true);
     } on ApiException catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(e.message)));
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+                'Could not submit your check-in. Check your connection and try again.'),
+          ),
+        );
       }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);

@@ -2,21 +2,27 @@
 Conversational AI wrapper (Section 5 of the blueprint: "Conversational AI").
 
 This module has exactly one job: turn a conversation history into a
-supportive, non-clinical reply. It has NO knowledge of risk scores,
+supportive, non-clinical reply. Local intent handling runs first for common
+messages; the configured hosted model handles open-ended topics. It has NO
+knowledge of risk scores,
 baselines, or behavioral signals, and nothing it returns is ever written
 to risk_scores directly -- that separation is intentional and is what
 keeps the eventual risk decision explainable (see app/risk_engine,
 built in Phase 8).
 
-If the OpenAI API is unavailable or misconfigured, generate_chat_reply
-falls back to a fixed supportive message instead of raising -- per
-Section 19 (Error Handling), an AI outage should never block the chat
-feature outright.
+If the hosted model is unavailable or out of quota, a transparent local
+guided-response mode keeps the conversation usable without claiming to be
+another generative model. No student text is logged by this module.
 """
+
+import logging
+import re
 
 from openai import AsyncOpenAI
 
 from app.core.config import settings
+
+logger = logging.getLogger(__name__)
 
 SYSTEM_PROMPT = """You are the in-app supportive companion inside MindPulse, \
 an app that helps university students stay aware of their well-being during \
@@ -44,38 +50,167 @@ clinical or lecture-like.
 """
 
 FALLBACK_REPLY = (
-    "I'm having trouble responding right now, but I still want to hear "
-    "what's going on. Could you try sending that again in a moment? If "
-    "you need to talk to someone right away, the Support tab can connect "
-    "you with a university counselor."
+    "Thanks for sharing that with me. What feels most important to talk "
+    "through right now?"
 )
 
-_client: AsyncOpenAI | None = None
-if settings.openai_api_key:
-    _client = AsyncOpenAI(api_key=settings.openai_api_key)
+CRISIS_PATTERN = re.compile(
+    r"\b("
+    r"suicid(?:e|al)|kill myself|end my life|self[- ]harm|hurt myself|"
+    r"take my own life|don't want to live|do not want to live"
+    r")\b",
+    re.IGNORECASE,
+)
+THANKS_PATTERN = re.compile(
+    r"^\s*(?:thanks?|thank\s+you|thx)(?:\s+(?:a\s+lot|so\s+much))?"
+    r"[\s!.,?]*$",
+    re.IGNORECASE,
+)
+HELP_PATTERN = re.compile(
+    r"^\s*(?:what\s+can\s+you\s+do|how\s+can\s+you\s+help|"
+    r"what\s+should\s+i\s+say|help|i\s+need\s+help)[\s!.,?]*$",
+    re.IGNORECASE,
+)
+GREETING_PATTERN = re.compile(
+    r"^\s*(?:(?:hi|hello|hey|good\s+(?:morning|afternoon|evening))"
+    r"(?:\s+there)?[\s!.,?]*)+$",
+    re.IGNORECASE,
+)
+STRESS_PATTERN = re.compile(
+    r"\b(stress(?:ed)?|overwhelm(?:ed|ing)?|pressure|deadline|exam|"
+    r"assignment|workload|too much)\b",
+    re.IGNORECASE,
+)
+SLEEP_PATTERN = re.compile(
+    r"\b(sleep|insomnia|tired|exhausted|can't rest|cannot rest)\b",
+    re.IGNORECASE,
+)
+LOW_MOOD_PATTERN = re.compile(
+    r"\b(sad|lonely|low|unmotivated|hopeless|anxious|worried)\b",
+    re.IGNORECASE,
+)
 
 
-async def generate_chat_reply(conversation_history: list[dict]) -> str:
+def generate_guided_reply(conversation_history: list[dict]) -> str:
+    """Return a local, rule-based supportive prompt when hosted AI is unavailable."""
+    latest_student_message = next(
+        (
+            item["content"].strip()
+            for item in reversed(conversation_history)
+            if item.get("role") == "user" and item.get("content", "").strip()
+        ),
+        "",
+    )
+
+    if not latest_student_message:
+        return FALLBACK_REPLY
+    return generate_intent_reply(latest_student_message) or (
+        "Thanks for sharing that. I want to understand it better: what part "
+        "of this has been affecting you the most?"
+    )
+
+
+def _create_hosted_client() -> tuple[AsyncOpenAI | None, str]:
+    if settings.chat_provider == "gemini":
+        if not settings.gemini_api_key:
+            return None, settings.gemini_chat_model
+        return (
+            AsyncOpenAI(
+                api_key=settings.gemini_api_key,
+                base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
+            ),
+            settings.gemini_chat_model,
+        )
+    if settings.openai_api_key:
+        return AsyncOpenAI(api_key=settings.openai_api_key), settings.openai_chat_model
+    return None, settings.openai_chat_model
+
+
+def generate_intent_reply(text: str) -> str | None:
+    """Handle common chat intents locally before calling a hosted LLM."""
+    normalized_text = text.strip()
+    if not normalized_text:
+        return None
+    if CRISIS_PATTERN.search(normalized_text):
+        return (
+            "I'm sorry things feel this heavy. I can't provide emergency help, "
+            "but your safety matters. If you may act on these thoughts or are "
+            "in immediate danger, contact your local emergency services now or "
+            "go to the nearest emergency department. If you can, tell someone "
+            "you trust and stay with them. You can also use Support to find a "
+            "university counselor."
+        )
+    if GREETING_PATTERN.fullmatch(normalized_text):
+        return (
+            "Hi! I'm here to talk with you. How are you feeling today? You can "
+            "tell me about stress, sleep, studies, or anything else on your mind."
+        )
+    if THANKS_PATTERN.fullmatch(normalized_text):
+        return "You're welcome. Is there anything else you'd like to talk through?"
+    if HELP_PATTERN.fullmatch(normalized_text):
+        return (
+            "I can listen and help you reflect on stress, studies, sleep, "
+            "motivation, or how your day is going. What would you like to start with?"
+        )
+    if STRESS_PATTERN.search(normalized_text):
+        return (
+            "It sounds like the pressure has been building up. We can make it "
+            "smaller: what is one task that needs attention first, and what is "
+            "a realistic 10-minute first step?"
+        )
+    if SLEEP_PATTERN.search(normalized_text):
+        return (
+            "It sounds like rest has been difficult, and that can make study "
+            "feel harder. What has been getting in the way of sleep lately?"
+        )
+    if LOW_MOOD_PATTERN.search(normalized_text):
+        return (
+            "Thank you for telling me. You don't have to solve everything at "
+            "once. What has felt hardest today, and is there someone you trust "
+            "you could check in with?"
+        )
+    return None
+
+
+_client, _chat_model = _create_hosted_client()
+
+
+async def generate_chat_reply(conversation_history: list[dict]) -> tuple[str, str]:
     """
     conversation_history: list of {"role": "user"|"assistant", "content": str},
     oldest first. Building this list is the caller's job (app/chat/service.py)
     since it needs to read prior messages from MongoDB first.
     """
+    latest_student_message = next(
+        (
+            item["content"].strip()
+            for item in reversed(conversation_history)
+            if item.get("role") == "user" and item.get("content", "").strip()
+        ),
+        "",
+    )
+    intent_reply = generate_intent_reply(latest_student_message)
+    if intent_reply is not None:
+        response_mode = "safety" if CRISIS_PATTERN.search(latest_student_message) else "intent"
+        return intent_reply, response_mode
+
     if _client is None:
-        # No API key configured -- fail safely rather than crash the endpoint.
-        return FALLBACK_REPLY
+        return generate_guided_reply(conversation_history), "guided"
 
     try:
         response = await _client.chat.completions.create(
-            model="gpt-4o-mini",
+            model=_chat_model,
             messages=[{"role": "system", "content": SYSTEM_PROMPT}, *conversation_history],
             max_tokens=300,
             temperature=0.7,
         )
         content = response.choices[0].message.content
-        return content.strip() if content else FALLBACK_REPLY
-    except Exception:
-        # Broad catch is intentional here: any failure mode (rate limit,
-        # network error, malformed response) should degrade to the fallback
-        # message rather than surface a 500 to the student.
-        return FALLBACK_REPLY
+        if content and content.strip():
+            return content.strip(), "hosted"
+        return generate_guided_reply(conversation_history), "guided"
+    except Exception as error:
+        logger.warning(
+            "Hosted chat completion failed (%s); using local guided response",
+            type(error).__name__,
+        )
+        return generate_guided_reply(conversation_history), "guided"

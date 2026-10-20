@@ -29,9 +29,12 @@ class ConsentModel {
     bool? allowReferralDataShare,
   }) {
     return ConsentModel(
-      shareSummaryWithParent: shareSummaryWithParent ?? this.shareSummaryWithParent,
-      shareWithUniversitySupport: shareWithUniversitySupport ?? this.shareWithUniversitySupport,
-      allowReferralDataShare: allowReferralDataShare ?? this.allowReferralDataShare,
+      shareSummaryWithParent:
+          shareSummaryWithParent ?? this.shareSummaryWithParent,
+      shareWithUniversitySupport:
+          shareWithUniversitySupport ?? this.shareWithUniversitySupport,
+      allowReferralDataShare:
+          allowReferralDataShare ?? this.allowReferralDataShare,
     );
   }
 }

@@ -5,6 +5,7 @@ class ChatMessage {
   final String sender; // "student" | "assistant"
   final String text;
   final DateTime createdAt;
+  final String? responseMode;
 
   ChatMessage({
     required this.id,
@@ -12,6 +13,7 @@ class ChatMessage {
     required this.sender,
     required this.text,
     required this.createdAt,
+    this.responseMode,
   });
 
   factory ChatMessage.fromJson(Map<String, dynamic> json) {
@@ -21,6 +23,7 @@ class ChatMessage {
       sender: json['sender'] as String,
       text: json['text'] as String,
       createdAt: DateTime.parse(json['created_at'] as String),
+      responseMode: json['response_mode'] as String?,
     );
   }
 }

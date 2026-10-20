@@ -32,7 +32,9 @@ async def send_message(
     user: dict = Depends(require_role(["student"])),
     db: AsyncIOMotorDatabase = Depends(get_database),
 ):
-    student_message, assistant_message = await handle_student_message(db, user["_id"], data.text)
+    student_message, assistant_message, response_mode = await handle_student_message(
+        db, user["_id"], data.text
+    )
     # Signal extraction (sentiment + chat behavior) runs AFTER the response
     # is sent, so it can never slow down or break the chat itself.
     background_tasks.add_task(process_student_message, db, student_message)
@@ -40,6 +42,7 @@ async def send_message(
         session_id=str(student_message["session_id"]),
         student_message=student_message,
         assistant_message=assistant_message,
+        response_mode=response_mode,
     )
 
 

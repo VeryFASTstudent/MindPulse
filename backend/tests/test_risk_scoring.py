@@ -7,11 +7,12 @@ from app.risk_engine.scoring import (
     calculate_deviations,
     consecutive_days_at_level,
     score_risk,
+    smooth_risk_score,
 )
 
 
 class RiskScoringTests(unittest.TestCase):
-    def test_baseline_averages_completed_checkins_and_available_sentiment(self):
+    def test_baseline_weights_recent_checkins_and_available_sentiment(self):
         start = datetime(2026, 1, 1)
         rows = [
             {
@@ -27,9 +28,10 @@ class RiskScoringTests(unittest.TestCase):
         baseline = build_baseline(rows, {start.date(): [-0.5, 0.5]})
 
         self.assertEqual(baseline["sample_size"], 2)
-        self.assertEqual(baseline["typical_stress"], 1.5)
-        self.assertEqual(baseline["typical_engagement"], 0.5)
+        self.assertEqual(baseline["typical_stress"], 1.5405)
+        self.assertEqual(baseline["typical_engagement"], 0.5405)
         self.assertEqual(baseline["typical_sentiment"], 0.0)
+        self.assertEqual(baseline["sentiment_sample_size"], 2)
 
     def test_no_checkins_produces_no_baseline(self):
         self.assertIsNone(build_baseline([], {}))
@@ -90,6 +92,13 @@ class RiskScoringTests(unittest.TestCase):
 
     def test_missing_all_comparable_signals_returns_no_score(self):
         self.assertIsNone(score_risk({}, {}))
+
+    def test_moving_average_smooths_one_high_day_before_classification(self):
+        result = smooth_risk_score([0.2, 0.3], 0.9)
+
+        self.assertEqual(result["weighted_score"], 0.4667)
+        self.assertEqual(result["raw_weighted_score"], 0.9)
+        self.assertEqual(result["risk_level"], "MEDIUM")
 
     def test_deviations_are_clipped_to_zero_and_one(self):
         deviations = calculate_deviations(

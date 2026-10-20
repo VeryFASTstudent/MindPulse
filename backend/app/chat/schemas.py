@@ -15,6 +15,7 @@ class MessageOut(BaseModel):
     sender: str
     text: str
     created_at: datetime
+    response_mode: str | None = None
 
     model_config = {"populate_by_name": True}
 
@@ -23,6 +24,7 @@ class ChatReplyResponse(BaseModel):
     session_id: PyObjectId
     student_message: MessageOut
     assistant_message: MessageOut
+    response_mode: str
 
 
 class SessionOut(BaseModel):

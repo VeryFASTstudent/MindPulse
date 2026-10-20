@@ -12,12 +12,15 @@ from datetime import datetime, timezone
 
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
-from app.auth.schemas import UserRegister
+from app.auth.schemas import UserRegister, UserRole
 from app.auth.security import hash_password, verify_password
-from app.core.exceptions import UnauthorizedError, ValidationFailedError
+from app.core.exceptions import ForbiddenError, UnauthorizedError, ValidationFailedError
 
 
 async def register_user(db: AsyncIOMotorDatabase, data: UserRegister) -> dict:
+    if data.role is not UserRole.student:
+        raise ForbiddenError(detail="Only student self-registration is permitted")
+
     existing = await db.users.find_one({"email": data.email})
     if existing:
         raise ValidationFailedError(detail="An account with this email already exists")

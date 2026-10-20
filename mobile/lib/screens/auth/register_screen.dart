@@ -7,9 +7,8 @@ import '../../utils/validators.dart';
 import '../../widgets/app_text_field.dart';
 import '../../widgets/primary_button.dart';
 
-/// Registration is student-only here -- parents, counselors, and admins
-/// are provisioned separately via the web dashboards built in later
-/// phases, not through this mobile app.
+/// Registration is student-only. Stakeholder accounts are provisioned by
+/// an authorized administrator rather than through public sign-up.
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
@@ -83,7 +82,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 AppTextField(
                   label: 'Full Name',
                   controller: _fullNameController,
-                  validator: (v) => Validators.required(v, fieldName: 'Full name'),
+                  validator: (v) =>
+                      Validators.required(v, fieldName: 'Full name'),
                 ),
                 const SizedBox(height: 16),
                 AppTextField(

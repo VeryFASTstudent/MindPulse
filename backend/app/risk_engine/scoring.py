@@ -71,17 +71,29 @@ def calculate_deviations(today: dict[str, Any], baseline: dict[str, Any]) -> dic
     return deviations
 
 
-def score_risk(today: dict[str, Any], baseline: dict[str, Any]) -> dict[str, Any] | None:
+def score_risk(
+    today: dict[str, Any],
+    baseline: dict[str, Any],
+    configuration: dict[str, Any] | None = None,
+) -> dict[str, Any] | None:
     """Calculate a weighted score, renormalizing over signals actually present."""
     deviations = calculate_deviations(today, baseline)
-    available_weight = sum(WEIGHTS[name] for name in deviations)
+    active_configuration = configuration or RISK_CONFIG
+    weights = {
+        name: float(active_configuration.get(name, WEIGHTS[name]))
+        for name in WEIGHTS
+    }
+    thresholds = active_configuration.get("thresholds", {})
+    low_max = float(active_configuration.get("low_max", thresholds.get("low_max", LOW_MAX)))
+    medium_max = float(active_configuration.get("medium_max", thresholds.get("medium_max", MEDIUM_MAX)))
+    available_weight = sum(weights[name] for name in deviations)
     if available_weight <= 0:
         return None
 
-    score = sum(WEIGHTS[name] * value for name, value in deviations.items()) / available_weight
-    if score < LOW_MAX:
+    score = sum(weights[name] * value for name, value in deviations.items()) / available_weight
+    if score < low_max:
         level = "LOW"
-    elif score < MEDIUM_MAX:
+    elif score < medium_max:
         level = "MEDIUM"
     else:
         level = "HIGH"
@@ -91,4 +103,35 @@ def score_risk(today: dict[str, Any], baseline: dict[str, Any]) -> dict[str, Any
         "risk_level": level,
         "raw_components": deviations,
         "signals_used": sorted(deviations),
+    }
+
+
+def smooth_risk_score(
+    recent_scores: list[float],
+    current_score: float,
+    configuration: dict[str, Any] | None = None,
+    window: int = 3,
+) -> dict[str, Any]:
+    """Classify a short moving average to reduce single-day risk fluctuations."""
+    if window < 1:
+        raise ValueError("window must be at least 1")
+    scores = [*recent_scores[-(window - 1):], current_score] if window > 1 else [current_score]
+    score = sum(scores) / len(scores)
+    active_configuration = configuration or RISK_CONFIG
+    thresholds = active_configuration.get("thresholds", {})
+    low_max = float(active_configuration.get("low_max", thresholds.get("low_max", LOW_MAX)))
+    medium_max = float(
+        active_configuration.get("medium_max", thresholds.get("medium_max", MEDIUM_MAX))
+    )
+    if score < low_max:
+        level = "LOW"
+    elif score < medium_max:
+        level = "MEDIUM"
+    else:
+        level = "HIGH"
+    return {
+        "weighted_score": round(score, 4),
+        "risk_level": level,
+        "raw_weighted_score": round(current_score, 4),
+        "smoothing_window": len(scores),
     }

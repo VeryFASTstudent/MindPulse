@@ -26,6 +26,7 @@ class _DashboardTabState extends State<DashboardTab> {
   RiskStatusModel? _riskStatus;
   int _streak = 0;
   bool _isLoading = true;
+  String? _error;
 
   @override
   void initState() {
@@ -34,7 +35,10 @@ class _DashboardTabState extends State<DashboardTab> {
   }
 
   Future<void> _loadData() async {
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
     try {
       final results = await Future.wait([
         _behaviorService.getTodayCheckin(),
@@ -48,9 +52,12 @@ class _DashboardTabState extends State<DashboardTab> {
         _riskStatus = results[2] as RiskStatusModel;
       });
     } catch (_) {
-      // Dashboard degrades gracefully -- if this fails (e.g. backend
-      // briefly unreachable), the cards just show their empty state
-      // instead of crashing the whole screen.
+      if (mounted) {
+        setState(() {
+          _error =
+              'Could not refresh your dashboard. Check your connection and try again.';
+        });
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -78,14 +85,41 @@ class _DashboardTabState extends State<DashboardTab> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Hi, $firstName 👋', style: Theme.of(context).textTheme.headlineMedium),
+              Text('Hi, $firstName 👋',
+                  style: Theme.of(context).textTheme.headlineMedium),
               const SizedBox(height: 4),
               Text(
                 "Here's your well-being snapshot",
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
+              if (_error != null) ...[
+                const SizedBox(height: 16),
+                Card(
+                  child: ListTile(
+                    leading: const Icon(Icons.cloud_off_outlined),
+                    title: Text(_error!),
+                    trailing: IconButton(
+                      tooltip: 'Retry',
+                      onPressed: _loadData,
+                      icon: const Icon(Icons.refresh),
+                    ),
+                  ),
+                ),
+              ],
               const SizedBox(height: 24),
               _StatusCard(status: _riskStatus, isLoading: _isLoading),
+              if (_riskStatus?.escalationSent == true) ...[
+                const SizedBox(height: 12),
+                const Card(
+                  child: ListTile(
+                    leading: Icon(Icons.notifications_active_outlined),
+                    title: Text('Support contact notified'),
+                    subtitle: Text(
+                      'Your selected support contacts received a brief alert after a sustained high pattern. Chat content was not shared.',
+                    ),
+                  ),
+                ),
+              ],
               const SizedBox(height: 16),
               Row(
                 children: [
@@ -109,7 +143,8 @@ class _DashboardTabState extends State<DashboardTab> {
                 ],
               ),
               const SizedBox(height: 24),
-              Text("Today's check-in", style: Theme.of(context).textTheme.titleMedium),
+              Text("Today's check-in",
+                  style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 12),
               _CheckinCard(
                 isLoading: _isLoading,
@@ -129,7 +164,8 @@ class _CheckinCard extends StatelessWidget {
   final CheckinModel? checkin;
   final VoidCallback onTap;
 
-  const _CheckinCard({required this.isLoading, required this.checkin, required this.onTap});
+  const _CheckinCard(
+      {required this.isLoading, required this.checkin, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -153,7 +189,9 @@ class _CheckinCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      done ? "You've checked in today" : "You haven't checked in today",
+                      done
+                          ? "You've checked in today"
+                          : "You haven't checked in today",
                       style: const TextStyle(fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: 4),
@@ -191,11 +229,13 @@ class _StatusCard extends StatelessWidget {
       _ => isLoading ? 'Loading your status' : 'Status unavailable',
     };
     final description = status?.message ??
-        (isLoading ? 'Your latest signals are being loaded.' : 'Pull down to refresh your status.');
+        (isLoading
+            ? 'Your latest signals are being loaded.'
+            : 'Pull down to refresh your status.');
     final currentStatus = status;
     final detail = currentStatus == null || currentStatus.weightedScore == null
-      ? null
-      : 'Observed ${currentStatus.observedLevel} · score ${(currentStatus.weightedScore! * 100).round()}% · ${currentStatus.consecutiveDaysAtLevel} consecutive days';
+        ? null
+        : 'Observed ${currentStatus.observedLevel} · score ${(currentStatus.weightedScore! * 100).round()}% · ${currentStatus.consecutiveDaysAtLevel} consecutive days';
 
     return Card(
       child: Container(
@@ -212,11 +252,15 @@ class _StatusCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Well-being status', style: TextStyle(color: Colors.white70, fontSize: 13)),
+            const Text('Well-being status',
+                style: TextStyle(color: Colors.white70, fontSize: 13)),
             const SizedBox(height: 6),
             Text(
               title,
-              style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 6),
             Text(
@@ -225,7 +269,8 @@ class _StatusCard extends StatelessWidget {
             ),
             if (detail != null) ...[
               const SizedBox(height: 8),
-              Text(detail, style: const TextStyle(color: Colors.white70, fontSize: 12)),
+              Text(detail,
+                  style: const TextStyle(color: Colors.white70, fontSize: 12)),
             ],
           ],
         ),
@@ -239,7 +284,8 @@ class _QuickStatCard extends StatelessWidget {
   final String value;
   final IconData icon;
 
-  const _QuickStatCard({required this.label, required this.value, required this.icon});
+  const _QuickStatCard(
+      {required this.label, required this.value, required this.icon});
 
   @override
   Widget build(BuildContext context) {
@@ -251,7 +297,9 @@ class _QuickStatCard extends StatelessWidget {
           children: [
             Icon(icon, color: AppTheme.secondaryColor),
             const SizedBox(height: 10),
-            Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            Text(value,
+                style:
+                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
             const SizedBox(height: 2),
             Text(label, style: Theme.of(context).textTheme.bodyMedium),
           ],

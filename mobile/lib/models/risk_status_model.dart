@@ -6,6 +6,7 @@ class RiskStatusModel {
   final int consecutiveDaysAtLevel;
   final int sampleSize;
   final int requiredSampleSize;
+  final bool escalationSent;
   final String message;
 
   const RiskStatusModel({
@@ -16,6 +17,7 @@ class RiskStatusModel {
     required this.consecutiveDaysAtLevel,
     required this.sampleSize,
     required this.requiredSampleSize,
+    required this.escalationSent,
     required this.message,
   });
 
@@ -28,6 +30,7 @@ class RiskStatusModel {
       consecutiveDaysAtLevel: json['consecutive_days_at_level'] as int? ?? 0,
       sampleSize: json['sample_size'] as int? ?? 0,
       requiredSampleSize: json['required_sample_size'] as int? ?? 5,
+      escalationSent: json['escalation_sent'] as bool? ?? false,
       message: json['message'] as String,
     );
   }

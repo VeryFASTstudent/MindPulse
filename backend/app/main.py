@@ -1,10 +1,8 @@
 """
 MindPulse backend entrypoint.
 
-Phase 1 scope: app boots, connects to MongoDB, creates indexes, and exposes
-a health check. Feature routers (auth, chat, risk_engine, etc.) are added
-to this file in their respective phases -- the `include_router` calls below
-are left as commented placeholders so the wiring point is obvious later.
+Connects to MongoDB, creates indexes, exposes a health check, and wires the
+student, AI, risk, and student-initiated referral APIs.
 """
 
 import asyncio
@@ -24,6 +22,8 @@ from app.db.mongodb import connect_to_mongo, close_mongo_connection, get_databas
 from app.db.indexes import create_indexes
 from app.risk_engine.routes import router as risk_router
 from app.sentiment.routes import router as sentiment_router
+from app.referral.routes import router as referral_router
+from app.dashboards.routes import router as dashboards_router
 
 
 @asynccontextmanager
@@ -79,14 +79,5 @@ app.include_router(chat_router, prefix="/chat", tags=["chat"])
 app.include_router(behavior_router, prefix="/behavior", tags=["behavior"])
 app.include_router(sentiment_router, prefix="/sentiment", tags=["sentiment"])
 app.include_router(risk_router, prefix="/risk", tags=["risk"])
-
-# --- Routers added in later phases ---
-# from app.consent.routes import router as consent_router
-# from app.risk_engine.routes import router as risk_router
-# from app.referral.routes import router as referral_router
-# from app.dashboards.routes import router as dashboards_router
-#
-# app.include_router(consent_router, prefix="/consent", tags=["consent"])
-# app.include_router(risk_router, prefix="/risk", tags=["risk"])
-# app.include_router(referral_router, prefix="/referral", tags=["referral"])
-# app.include_router(dashboards_router, prefix="/dashboard", tags=["dashboard"])
+app.include_router(referral_router, prefix="/referral", tags=["referral"])
+app.include_router(dashboards_router, prefix="/dashboard", tags=["dashboard"])

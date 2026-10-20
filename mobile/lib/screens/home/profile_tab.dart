@@ -71,16 +71,23 @@ class _ProfileTabState extends State<ProfileTab> {
             radius: 36,
             backgroundColor: AppTheme.primaryColor,
             child: Text(
-              (user?.fullName.isNotEmpty ?? false) ? user!.fullName[0].toUpperCase() : '?',
-              style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
+              (user?.fullName.isNotEmpty ?? false)
+                  ? user!.fullName[0].toUpperCase()
+                  : '?',
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold),
             ),
           ),
           const SizedBox(height: 16),
           Center(
-            child: Text(user?.fullName ?? '', style: Theme.of(context).textTheme.titleMedium),
+            child: Text(user?.fullName ?? '',
+                style: Theme.of(context).textTheme.titleMedium),
           ),
           Center(
-            child: Text(user?.email ?? '', style: Theme.of(context).textTheme.bodyMedium),
+            child: Text(user?.email ?? '',
+                style: Theme.of(context).textTheme.bodyMedium),
           ),
           const SizedBox(height: 32),
           Card(
@@ -108,7 +115,9 @@ class _ProfileTabState extends State<ProfileTab> {
                 else if (_consent != null) ...[
                   SwitchListTile(
                     title: const Text('Share summary with parent'),
-                    subtitle: const Text('Allow a linked parent to see well-being summaries.'),
+                    subtitle: const Text(
+                      'A linked parent can view summaries and may receive an in-app alert after a sustained high pattern.',
+                    ),
                     value: _consent!.shareSummaryWithParent,
                     onChanged: _isSavingConsent
                         ? null
@@ -118,17 +127,22 @@ class _ProfileTabState extends State<ProfileTab> {
                   ),
                   SwitchListTile(
                     title: const Text('Share with university support'),
-                    subtitle: const Text('Allow authorized support staff to see your summary.'),
+                    subtitle: const Text(
+                      'University counselors may receive a summary-only in-app alert after a sustained high pattern.',
+                    ),
                     value: _consent!.shareWithUniversitySupport,
                     onChanged: _isSavingConsent
                         ? null
                         : (value) => _saveConsent(
-                              _consent!.copyWith(shareWithUniversitySupport: value),
+                              _consent!
+                                  .copyWith(shareWithUniversitySupport: value),
                             ),
                   ),
                   SwitchListTile(
-                    title: const Text('Share data for referrals'),
-                    subtitle: const Text('Allow your summary to accompany a referral request.'),
+                    title: const Text('Allow counselor referral requests'),
+                    subtitle: const Text(
+                      'Allows a counselor to receive your identity and request status when you ask for support. Chat messages are never shared.',
+                    ),
                     value: _consent!.allowReferralDataShare,
                     onChanged: _isSavingConsent
                         ? null
@@ -139,7 +153,8 @@ class _ProfileTabState extends State<ProfileTab> {
                 ] else
                   const ListTile(
                     title: Text('Privacy settings unavailable'),
-                    subtitle: Text('Check your connection and reopen Profile to try again.'),
+                    subtitle: Text(
+                        'Check your connection and reopen Profile to try again.'),
                   ),
               ],
             ),
@@ -156,11 +171,13 @@ class _ProfileTabState extends State<ProfileTab> {
               }
             },
             icon: const Icon(Icons.logout, color: AppTheme.riskHigh),
-            label: const Text('Log Out', style: TextStyle(color: AppTheme.riskHigh)),
+            label: const Text('Log Out',
+                style: TextStyle(color: AppTheme.riskHigh)),
             style: OutlinedButton.styleFrom(
               minimumSize: const Size.fromHeight(50),
               side: const BorderSide(color: AppTheme.riskHigh),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14)),
             ),
           ),
         ],

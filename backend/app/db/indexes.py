@@ -30,3 +30,14 @@ async def create_indexes(db: AsyncIOMotorDatabase) -> None:
 
     await db.appointments.create_index([("student_id", 1), ("status", 1)])
     await db.appointments.create_index([("counselor_id", 1), ("status", 1)])
+    await db.counselors.create_index("user_id", unique=True)
+    await db.external_support_resources.create_index(
+        [("is_active", 1), ("name", 1)]
+    )
+    await db.escalation_events.create_index(
+        [("student_id", 1), ("recipient_id", 1), ("trigger_date", 1)],
+        unique=True,
+    )
+    await db.escalation_events.create_index(
+        [("recipient_id", 1), ("status", 1), ("trigger_date", -1)]
+    )

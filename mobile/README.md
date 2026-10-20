@@ -1,17 +1,18 @@
-# mindpulse
+# MindPulse Flutter client
 
-A new Flutter project.
+The mobile client provides the student workflow (dashboard, check-in, private
+chat, trends, counselor support, and privacy profile) plus role-specific
+counselor, parent, and university-admin dashboards. It connects to the FastAPI
+backend; start and configure the backend as described in
+[`../README.md`](../README.md) before using authenticated screens.
 
-## Getting Started
+The default web API URL is `http://127.0.0.1:8000`. Android emulators use
+`http://10.0.2.2:8000`; physical-device development requires the host machine's
+LAN IP in `lib/core/constants.dart`.
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+```powershell
+flutter pub get
+flutter run -d web-server --web-port 8080
+flutter analyze
+flutter test
+```

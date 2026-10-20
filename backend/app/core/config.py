@@ -7,6 +7,7 @@ development). Nothing here should ever be hard-coded with real secrets --
 """
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from typing import Literal
 
 
 class Settings(BaseSettings):
@@ -26,7 +27,11 @@ class Settings(BaseSettings):
     refresh_token_expire_days: int = 7
 
     # --- AI ---
+    chat_provider: Literal["openai", "gemini"] = "openai"
     openai_api_key: str = ""
+    openai_chat_model: str = "gpt-4o-mini"
+    gemini_api_key: str = ""
+    gemini_chat_model: str = "gemini-2.5-flash"
 
     # --- Sentiment analysis (Phase 6) ---
     # Set SENTIMENT_ENABLED=false to skip the local model entirely

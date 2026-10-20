@@ -85,7 +85,7 @@ class AuthService {
       return getCurrentUser();
     }
 
-    return null;
+    throw ApiException(response.statusCode, _extractDetail(response));
   }
 
   Future<bool> _tryRefresh() async {
@@ -116,7 +116,8 @@ class AuthService {
   String _extractDetail(http.Response response) {
     try {
       final body = jsonDecode(response.body);
-      return body['detail']?.toString() ?? 'Something went wrong. Please try again.';
+      return body['detail']?.toString() ??
+          'Something went wrong. Please try again.';
     } catch (_) {
       return 'Something went wrong. Please try again.';
     }

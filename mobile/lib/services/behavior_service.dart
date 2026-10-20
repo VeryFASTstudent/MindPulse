@@ -84,7 +84,8 @@ class BehaviorService {
   String _extractDetail(http.Response response) {
     try {
       final body = jsonDecode(response.body);
-      return body['detail']?.toString() ?? 'Something went wrong. Please try again.';
+      return body['detail']?.toString() ??
+          'Something went wrong. Please try again.';
     } catch (_) {
       return 'Something went wrong. Please try again.';
     }

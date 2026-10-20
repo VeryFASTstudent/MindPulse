@@ -21,10 +21,19 @@ class AuthProvider extends ChangeNotifier {
   /// existing valid session before deciding whether to show
   /// login or the home dashboard.
   Future<void> checkAuthStatus() async {
-    final user = await _authService.getCurrentUser();
-    currentUser = user;
-    status = user != null ? AuthStatus.authenticated : AuthStatus.unauthenticated;
-    notifyListeners();
+    try {
+      final user = await _authService.getCurrentUser();
+      currentUser = user;
+      status =
+          user != null ? AuthStatus.authenticated : AuthStatus.unauthenticated;
+    } catch (_) {
+      currentUser = null;
+      status = AuthStatus.unauthenticated;
+      errorMessage =
+          'Could not connect to MindPulse. Check that the backend is running and try again.';
+    } finally {
+      notifyListeners();
+    }
   }
 
   Future<bool> login(String email, String password) async {
@@ -34,14 +43,22 @@ class AuthProvider extends ChangeNotifier {
 
     try {
       await _authService.login(email: email, password: password);
-      currentUser = await _authService.getCurrentUser();
+      final user = await _authService.getCurrentUser();
+      if (user == null) {
+        await _authService.logout();
+        errorMessage =
+            'Your session could not be verified. Please log in again.';
+        return false;
+      }
+      currentUser = user;
       status = AuthStatus.authenticated;
       return true;
     } on ApiException catch (e) {
       errorMessage = e.message;
       return false;
     } catch (_) {
-      errorMessage = 'Could not connect to MindPulse. Check that the backend is running and try again.';
+      errorMessage =
+          'Could not connect to MindPulse. Check that the backend is running and try again.';
       return false;
     } finally {
       isLoading = false;
@@ -81,7 +98,8 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
       return false;
     } catch (_) {
-      errorMessage = 'Could not connect to MindPulse. Check that the backend is running and try again.';
+      errorMessage =
+          'Could not connect to MindPulse. Check that the backend is running and try again.';
       isLoading = false;
       notifyListeners();
       return false;

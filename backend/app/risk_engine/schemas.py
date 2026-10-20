@@ -12,4 +12,5 @@ class RiskStatusOut(BaseModel):
     sample_size: int = 0
     required_sample_size: int = 5
     raw_components: dict[str, float] = Field(default_factory=dict)
+    escalation_sent: bool = False
     message: str

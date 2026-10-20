@@ -50,48 +50,65 @@ class _LoginScreenState extends State<LoginScreen> {
 
     return Scaffold(
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 40),
-                Text('Welcome back', style: Theme.of(context).textTheme.headlineMedium),
-                const SizedBox(height: 8),
-                Text(
-                  'Log in to check in with yourself today.',
-                  style: Theme.of(context).textTheme.bodyMedium,
+        child: LayoutBuilder(
+          builder: (context, constraints) => SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: ConstrainedBox(
+              constraints:
+                  BoxConstraints(minHeight: constraints.maxHeight - 48),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 40),
+                    Text('Welcome back',
+                        style: Theme.of(context).textTheme.headlineMedium),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Log in to check in with yourself today.',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    if (authProvider.errorMessage != null) ...[
+                      const SizedBox(height: 16),
+                      Text(
+                        authProvider.errorMessage!,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 32),
+                    AppTextField(
+                      label: 'Email',
+                      controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      validator: Validators.email,
+                    ),
+                    const SizedBox(height: 16),
+                    AppTextField(
+                      label: 'Password',
+                      controller: _passwordController,
+                      isPassword: true,
+                      validator: Validators.password,
+                    ),
+                    const SizedBox(height: 24),
+                    PrimaryButton(
+                      label: 'Log In',
+                      isLoading: authProvider.isLoading,
+                      onPressed: () => _submit(authProvider),
+                    ),
+                    const SizedBox(height: 16),
+                    Center(
+                      child: TextButton(
+                        onPressed: () =>
+                            Navigator.of(context).pushNamed(AppRoutes.register),
+                        child: const Text("Don't have an account? Sign up"),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 32),
-                AppTextField(
-                  label: 'Email',
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  validator: Validators.email,
-                ),
-                const SizedBox(height: 16),
-                AppTextField(
-                  label: 'Password',
-                  controller: _passwordController,
-                  isPassword: true,
-                  validator: Validators.password,
-                ),
-                const SizedBox(height: 24),
-                PrimaryButton(
-                  label: 'Log In',
-                  isLoading: authProvider.isLoading,
-                  onPressed: () => _submit(authProvider),
-                ),
-                const SizedBox(height: 16),
-                Center(
-                  child: TextButton(
-                    onPressed: () => Navigator.of(context).pushNamed(AppRoutes.register),
-                    child: const Text("Don't have an account? Sign up"),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ),

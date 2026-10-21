@@ -6,6 +6,7 @@ class ChatMessage {
   final String text;
   final DateTime createdAt;
   final String? responseMode;
+  final bool synthetic;
 
   ChatMessage({
     required this.id,
@@ -14,6 +15,7 @@ class ChatMessage {
     required this.text,
     required this.createdAt,
     this.responseMode,
+    this.synthetic = false,
   });
 
   factory ChatMessage.fromJson(Map<String, dynamic> json) {
@@ -24,6 +26,7 @@ class ChatMessage {
       text: json['text'] as String,
       createdAt: DateTime.parse(json['created_at'] as String),
       responseMode: json['response_mode'] as String?,
+      synthetic: json['synthetic'] as bool? ?? false,
     );
   }
 }

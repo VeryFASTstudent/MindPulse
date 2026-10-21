@@ -149,3 +149,59 @@ current prototype and must not determine risk scores or escalation.
 
 See [FYP_RnD_Assessment_and_Roadmap.md](./FYP_RnD_Assessment_and_Roadmap.md) for
 the proposal alignment, evaluation design, and research limitations.
+
+## Demo accounts (synthetic)
+
+The repository includes a guarded synthetic dataset for demonstrations. It will
+refuse to run unless `ALLOW_DEMO_SEED=true` is explicitly set. The seed uses
+relative dates, real password hashing, the real risk engine, and the real
+consent-checked escalation service. It never runs the Hugging Face model.
+
+```powershell
+Set-Location .\backend
+$env:ALLOW_DEMO_SEED = "true"
+python -m scripts.seed_demo_data --reset
+```
+
+All demo accounts use the password `Demo@12345`:
+
+| Role | Email | Result/use |
+|---|---|---|
+| Student | `aisha@mindpulse.com` | Stable positive profile |
+| Student | `bilal@mindpulse.com` | Sustained decline and consent-gated alert |
+| Student | `hamza@mindpulse.com` | One-day spike without escalation |
+| Student | `sana@mindpulse.com` | Sparse history and insufficient data |
+| Student | `zainab@mindpulse.com` | High but stable personal baseline |
+| Parent | `parent@mindpulse.com` | Linked to Bilal only |
+| Counselor | `counselor@mindpulse.com` | Synthetic counselor inbox/profile |
+| Admin | `admin@mindpulse.com` | Aggregate dashboard |
+| Student | `live@mindpulse.com` | Empty account for live typing/check-in demo |
+
+The unchanged risk formula currently evaluates the supplied Bilal narrative at
+approximately `0.4713` (`MEDIUM` observed, `MONITORING` status, no alert) because
+the configured HIGH threshold is `0.65` and the recency-weighted baseline adapts
+during the decline.
+The seed prints this mismatch instead of changing the engine. To demonstrate a
+real HIGH alert, make Bilal's pre-decline baseline materially lower/higher in
+the editable persona values while preserving the engine and then rerun the
+seed; do not present the current MEDIUM result as a HIGH alert.
+
+Use `--reset` to delete only records marked synthetic or belonging to these
+demo addresses before recreating the dataset. Demo chat histories are stored
+in `backend/scripts/demo_chats.json`; assistant messages are scripted guided
+responses and are visibly marked as demo data in the Flutter chat screen.
+
+## Chat security and Trends authentication
+
+Personal, emotional, casual, positive, neutral, Roman Urdu, and short student
+messages remain in scope. Local guardrails block only clear assistant-directed
+instruction attacks, private-data/prompt extraction, crisis phrases, and
+unrelated work requests. Hosted responses are JSON-validated and checked for
+canary disclosure, diagnosis, medication advice, unapproved links/phone
+numbers, and excessive length.
+
+Trends/status requests use the shared authenticated client. It attaches the
+JWT, refreshes once after a `401`, retries, and clears tokens with a clear
+login-required error if refresh fails. The original cause of the Trends auth
+error was inconsistent refresh handling: sentiment retried, behavior history
+did not, and `getCurrentUser()` called a nonexistent `_tryRefresh()` method.

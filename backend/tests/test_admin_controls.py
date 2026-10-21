@@ -39,10 +39,11 @@ class AdminControlTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_admin_configuration_controls_future_risk_thresholds(self):
         values = default_risk_configuration()
+        values["min_signal_coverage"] = 0.2
         baseline = {"typical_stress": 1.0}
         today = {"stress": 5.5}
 
-        default_result = score_risk(today, baseline)
+        default_result = score_risk(today, baseline, {"min_signal_coverage": 0.2})
         values["low_max"] = 0.6
         updated_result = score_risk(today, baseline, values)
 

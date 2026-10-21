@@ -8,5 +8,6 @@
     "low_max": 0.35,
     "medium_max": 0.65
   },
-  "min_consecutive_days": 3
+  "min_consecutive_days": 3,
+  "min_signal_coverage": 0.5
 }

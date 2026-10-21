@@ -197,7 +197,7 @@ class DashboardService {
   Future<Map<String, String>> _authHeaders() async {
     final token = await _tokenStorage.getAccessToken();
     return {
-      if (token != null) 'Authorization': '******',
+      if (token != null) 'Authorization': 'Bearer $token',
     };
   }
 

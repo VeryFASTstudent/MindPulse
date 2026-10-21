@@ -61,6 +61,7 @@ class RiskConfiguration(BaseModel):
     low_max: float = Field(gt=0, lt=1)
     medium_max: float = Field(gt=0, lt=1)
     min_consecutive_days: int = Field(ge=2, le=14)
+    min_signal_coverage: float = Field(default=0.5, gt=0, le=1)
 
     @model_validator(mode="after")
     def validate_thresholds_and_weights(self):

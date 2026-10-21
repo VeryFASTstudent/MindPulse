@@ -40,10 +40,14 @@ def _signal_values(row: dict[str, Any], sentiment_by_day: dict[date, list[float]
     }
 
 
-async def get_risk_status(db: AsyncIOMotorDatabase, student_id: ObjectId) -> dict[str, Any]:
+async def get_risk_status(
+    db: AsyncIOMotorDatabase,
+    student_id: ObjectId,
+    as_of: date | None = None,
+) -> dict[str, Any]:
     configuration = await get_risk_configuration(db)
     min_consecutive_days = int(configuration["min_consecutive_days"])
-    today = _today_utc()
+    today = as_of or _today_utc()
     start = today - timedelta(days=BASELINE_WINDOW_DAYS - 1)
     rows = await db.behavioral_signals.find(
         {
@@ -105,7 +109,7 @@ async def get_risk_status(db: AsyncIOMotorDatabase, student_id: ObjectId) -> dic
             daily_baseline,
             configuration,
         )
-        if daily_result is None:
+        if daily_result is None or daily_result.get("risk_level") == "INSUFFICIENT_DATA":
             continue
         recent_scores = [
             item.get("raw_weighted_score", item["weighted_score"])

@@ -5,10 +5,12 @@ import 'package:http/http.dart' as http;
 import '../core/constants.dart';
 import '../models/checkin_model.dart';
 import 'api_exception.dart';
+import 'authenticated_client.dart';
 import 'token_storage_service.dart';
 
 class BehaviorService {
   final TokenStorageService _tokenStorage = TokenStorageService();
+  final AuthenticatedClient _authenticatedClient = AuthenticatedClient();
 
   Future<Map<String, String>> _authHeaders() async {
     final token = await _tokenStorage.getAccessToken();
@@ -69,9 +71,8 @@ class BehaviorService {
   }
 
   Future<List<CheckinModel>> getHistory({int days = 7}) async {
-    final response = await http.get(
+    final response = await _authenticatedClient.get(
       Uri.parse(ApiConstants.checkinHistory(days)),
-      headers: await _authHeaders(),
     );
 
     if (response.statusCode != 200) {

@@ -41,8 +41,17 @@ def _today_utc_midnight() -> datetime:
     return datetime(now.year, now.month, now.day)
 
 
-async def submit_checkin(db: AsyncIOMotorDatabase, student_id: ObjectId, data: CheckinRequest) -> dict:
-    today = _today_utc_midnight()
+async def submit_checkin(
+    db: AsyncIOMotorDatabase,
+    student_id: ObjectId,
+    data: CheckinRequest,
+    as_of: datetime | None = None,
+) -> dict:
+    today = (
+        datetime(as_of.year, as_of.month, as_of.day)
+        if as_of is not None
+        else _today_utc_midnight()
+    )
     await db.behavioral_signals.update_one(
         {"student_id": student_id, "date": today},
         {

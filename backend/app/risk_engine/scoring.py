@@ -13,10 +13,11 @@ with _CONFIG_PATH.open(encoding="utf-8") as config_file:
 WEIGHTS: dict[str, float] = {
     name: float(value)
     for name, value in RISK_CONFIG.items()
-    if name not in {"thresholds", "min_consecutive_days"}
+    if name not in {"thresholds", "min_consecutive_days", "min_signal_coverage"}
 }
 LOW_MAX = float(RISK_CONFIG["thresholds"]["low_max"])
 MEDIUM_MAX = float(RISK_CONFIG["thresholds"]["medium_max"])
+MIN_SIGNAL_COVERAGE = float(RISK_CONFIG["min_signal_coverage"])
 
 
 def _clip(value: float) -> float:
@@ -89,6 +90,17 @@ def score_risk(
     available_weight = sum(weights[name] for name in deviations)
     if available_weight <= 0:
         return None
+    min_signal_coverage = float(
+        active_configuration.get("min_signal_coverage", MIN_SIGNAL_COVERAGE)
+    )
+    if available_weight < min_signal_coverage:
+        return {
+            "status": "insufficient_data",
+            "risk_level": "INSUFFICIENT_DATA",
+            "weighted_score": None,
+            "raw_components": deviations,
+            "signals_used": sorted(deviations),
+        }
 
     score = sum(weights[name] * value for name, value in deviations.items()) / available_weight
     if score < low_max:

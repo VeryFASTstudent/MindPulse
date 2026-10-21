@@ -101,7 +101,7 @@ class ReferralService {
     final token = await _tokenStorage.getAccessToken();
     return {
       'Content-Type': 'application/json',
-      if (token != null) 'Authorization': '******',
+      if (token != null) 'Authorization': 'Bearer $token',
     };
   }
 

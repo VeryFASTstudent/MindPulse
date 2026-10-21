@@ -22,6 +22,7 @@ def default_risk_configuration() -> dict[str, Any]:
         "low_max": float(RISK_CONFIG["thresholds"]["low_max"]),
         "medium_max": float(RISK_CONFIG["thresholds"]["medium_max"]),
         "min_consecutive_days": int(RISK_CONFIG["min_consecutive_days"]),
+        "min_signal_coverage": float(RISK_CONFIG["min_signal_coverage"]),
     }
 
 

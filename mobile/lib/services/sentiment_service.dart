@@ -5,16 +5,14 @@ import 'package:http/http.dart' as http;
 import '../core/constants.dart';
 import '../models/daily_sentiment_model.dart';
 import 'api_exception.dart';
-import 'token_storage_service.dart';
+import 'authenticated_client.dart';
 
 class SentimentService {
-  final TokenStorageService _tokenStorage = TokenStorageService();
+  final AuthenticatedClient _authenticatedClient = AuthenticatedClient();
 
   Future<List<DailySentimentModel>> getDailySentiment({int days = 30}) async {
-    final token = await _tokenStorage.getAccessToken();
-    final response = await http.get(
+    final response = await _authenticatedClient.get(
       Uri.parse('${ApiConstants.dailySentiment}?days=$days'),
-      headers: {if (token != null) 'Authorization': '******'},
     );
     if (response.statusCode != 200) {
       throw ApiException(

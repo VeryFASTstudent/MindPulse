@@ -32,6 +32,8 @@ class Settings(BaseSettings):
     openai_chat_model: str = "gpt-4o-mini"
     gemini_api_key: str = ""
     gemini_chat_model: str = "gemini-2.5-flash"
+    chat_rate_limit_per_minute: int = 20
+    chat_rate_limit_per_day: int = 300
 
     # --- Sentiment analysis (Phase 6) ---
     # Set SENTIMENT_ENABLED=false to skip the local model entirely

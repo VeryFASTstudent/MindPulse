@@ -19,6 +19,7 @@ class _ChatScreenState extends State<ChatScreen> {
   final List<ChatMessage> _messages = [];
   bool _isSending = false;
   bool _isLoadingHistory = true;
+  String? _pendingCheckinSession;
 
   @override
   void initState() {
@@ -71,9 +72,14 @@ class _ChatScreenState extends State<ChatScreen> {
     });
 
     try {
-      final newMessages = await _chatService.sendMessage(text);
+      final result = await _chatService.sendMessage(text);
       if (!mounted) return;
-      setState(() => _messages.addAll(newMessages));
+      setState(() {
+        _messages.addAll(result.messages);
+        _pendingCheckinSession = result.checkinState == 'awaiting_confirmation'
+          ? result.sessionId
+          : _pendingCheckinSession;
+      });
       _scrollToBottom();
     } on ApiException catch (e) {
       if (mounted) {
@@ -93,6 +99,29 @@ class _ChatScreenState extends State<ChatScreen> {
       }
     } finally {
       if (mounted) setState(() => _isSending = false);
+    }
+  }
+
+  Future<void> _confirmCheckin(String action) async {
+    final sessionId = _pendingCheckinSession;
+    if (sessionId == null) return;
+    try {
+      final status = await _chatService.confirmCheckin(sessionId, action);
+      if (!mounted) return;
+      setState(() {
+        if (status == 'saved' || status == 'cancelled') {
+          _pendingCheckinSession = null;
+        }
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Check-in $status.')),
+      );
+    } on ApiException catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(error.message)),
+        );
+      }
     }
   }
 
@@ -123,6 +152,16 @@ class _ChatScreenState extends State<ChatScreen> {
                       'Hosted AI is unavailable; guided offline responses are active.',
                   child: Icon(Icons.info_outline),
                 ),
+              ),
+            ),
+          if (_messages.any((message) => message.synthetic))
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              color: Colors.amber.withValues(alpha: 0.16),
+              child: const Text(
+                'Demo data: this conversation is synthetic and not a real student record.',
+                style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
               ),
             ),
         ],
@@ -173,6 +212,21 @@ class _ChatScreenState extends State<ChatScreen> {
                             _MessageBubble(message: _messages[index]),
                       ),
           ),
+          if (_pendingCheckinSession != null)
+            Card(
+              margin: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Row(
+                  children: [
+                    const Expanded(child: Text('Your check-in is ready to save.')),
+                    TextButton(onPressed: () => _confirmCheckin('cancel'), child: const Text('Cancel')),
+                    TextButton(onPressed: () => _confirmCheckin('edit'), child: const Text('Edit')),
+                    FilledButton(onPressed: () => _confirmCheckin('confirm'), child: const Text('Confirm')),
+                  ],
+                ),
+              ),
+            ),
           if (_isSending)
             const Padding(
               padding: EdgeInsets.only(bottom: 8),
@@ -231,10 +285,25 @@ class _MessageBubble extends StatelessWidget {
           color: isStudent ? AppTheme.primaryColor : Colors.white,
           borderRadius: BorderRadius.circular(16),
         ),
-        child: Text(
-          message.text,
-          style:
-              TextStyle(color: isStudent ? Colors.white : AppTheme.textPrimary),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              message.text,
+              style: TextStyle(color: isStudent ? Colors.white : AppTheme.textPrimary),
+            ),
+            if (!isStudent && message.responseMode != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  message.responseMode!,
+                  style: TextStyle(
+                    color: isStudent ? Colors.white70 : AppTheme.textSecondary,
+                    fontSize: 10,
+                  ),
+                ),
+              ),
+          ],
         ),
       ),
     );

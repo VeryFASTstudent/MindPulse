@@ -80,7 +80,7 @@ class HostedReplyTests(unittest.IsolatedAsyncioTestCase):
             return_value=SimpleNamespace(
                 choices=[
                     SimpleNamespace(
-                        message=SimpleNamespace(content="That sounds difficult.")
+                        message=SimpleNamespace(content='{"in_scope": true, "reply": "That sounds difficult."}')
                     )
                 ]
             )
@@ -132,7 +132,7 @@ class HostedReplyTests(unittest.IsolatedAsyncioTestCase):
             return_value=SimpleNamespace(
                 choices=[
                     SimpleNamespace(
-                        message=SimpleNamespace(content="Let's think through what to say.")
+                        message=SimpleNamespace(content='{"in_scope": true, "reply": "Let\'s think through what to say."}')
                     )
                 ]
             )

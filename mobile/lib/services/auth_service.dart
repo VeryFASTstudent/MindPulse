@@ -66,10 +66,10 @@ class AuthService {
   /// Returns null if there's no token or it's invalid/expired -- callers
   /// (SplashScreen, AuthProvider) treat null as "not logged in."
   Future<UserModel?> getCurrentUser() async {
-    final accessToken = await _tokenStorage.getAccessToken();
+    var accessToken = await _tokenStorage.getAccessToken();
     if (accessToken == null) return null;
 
-    final response = await http.get(
+    var response = await http.get(
       Uri.parse(ApiConstants.me),
       headers: {'Authorization': 'Bearer $accessToken'},
     );
@@ -80,15 +80,25 @@ class AuthService {
 
     if (response.statusCode == 401) {
       // Access token expired -- try refreshing once before giving up.
-      final refreshed = await _tryRefresh();
+      final refreshed = await tryRefresh();
       if (!refreshed) return null;
-      return getCurrentUser();
+      accessToken = await _tokenStorage.getAccessToken();
+      if (accessToken == null) return null;
+      response = await http.get(
+        Uri.parse(ApiConstants.me),
+        headers: {'Authorization': 'Bearer $accessToken'},
+      );
+      if (response.statusCode == 200) {
+        return UserModel.fromJson(jsonDecode(response.body));
+      }
+      await _tokenStorage.clear();
+      return null;
     }
 
     throw ApiException(response.statusCode, _extractDetail(response));
   }
 
-  Future<bool> _tryRefresh() async {
+  Future<bool> tryRefresh() async {
     final refreshToken = await _tokenStorage.getRefreshToken();
     if (refreshToken == null) return false;
 

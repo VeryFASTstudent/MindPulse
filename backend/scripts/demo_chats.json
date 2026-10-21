@@ -1,0 +1,79 @@
+{
+  "version": 1,
+  "schema": "Each day contains alternating student and assistant text, beginning with student.",
+  "students": {
+    "aisha@mindpulse.com": {
+      "sentiments": [0.6,0.55,0.65,0.58,0.62,0.56,0.64,0.59,0.61,0.57],
+      "days": [
+        ["Quiz went great today! Aaj mood kaafi acha hai.","That is wonderful, congratulations! What felt best about it?","I liked seeing my preparation pay off.","That sounds satisfying. You gave yourself something to be proud of.","Now I feel ready for tomorrow.","It is nice to hear that confidence growing."],
+        ["I had a calm morning and finished my notes.","That sounds like a steady start. What helped you focus?","A short walk before class.","Small routines can make a real difference.","I might keep doing that.","That sounds like a useful plan."],
+        ["Lunch with friends was really fun.","A good break can brighten the whole day. What made you laugh?","We talked about a silly campus story.","Those ordinary moments can be very restorative.","I came back feeling lighter.","I am glad the break helped."],
+        ["I got good feedback from my tutor.","That is lovely to hear. What did they notice?","They said my explanation was clear.","You can let yourself enjoy that progress.","I will remember it next time.","That sounds like a helpful confidence boost."],
+        ["Today was busy but manageable.","It sounds like you found a workable rhythm.","I used a small to-do list.","A short list can make a busy day feel clearer.","It stopped me from overthinking.","That is a good result from a simple tool."],
+        ["Aaj din acha tha, I felt cheerful.","I am glad the day felt good. What was the nicest part?","Talking with my cousin.","Connection can make an ordinary day feel warm.","Yes, I needed that chat.","It sounds like it came at the right time."],
+        ["I finished a task I had been avoiding.","That is a meaningful win. How did it feel afterward?","Honestly, lighter.","That relief is worth noticing.","I want to start earlier tomorrow.","That sounds like a kind, practical goal."],
+        ["The weather was nice and I studied outside.","A change of setting can feel refreshing. Did it help?","Yes, I stayed present longer.","I am glad you found a setting that suited you.","It made study less dull.","That is useful information about what works for you."],
+        ["I cooked something simple tonight.","That sounds grounding. What did you make?","Rice and vegetables.","Simple food and a slower evening can be comforting.","I enjoyed making it.","That is a lovely way to close the day."],
+        ["I feel good about this week.","It sounds like you have noticed several small wins.","Yes, I want to keep that feeling.","You can carry it forward one small step at a time.","I will try.","That sounds good." ]
+      ]
+    },
+    "bilal@mindpulse.com": {
+      "sentiments": [0.2,0.15,0.25,0.1,0.18,0.1,0.1,-0.8,-0.8,-0.8],
+      "days": [
+        ["Hey, today was okay. Lectures were long but I managed.","Glad you got through it. Anything from today that felt good, even something small?","Lunch with friends, we laughed a lot.","That sounds like a nice break. How are you feeling about the week ahead?","Fine, bit busy with the OS assignment but fine.","You have got through a full day already."],
+        ["Classes were tiring but manageable.","It sounds like you kept going despite the long day.","I had tea with a friend after class.","That kind of pause can help. What is one thing you want to finish tomorrow?","Probably the reading.","That sounds like a clear first step."],
+        ["I got most of my work done today.","That is a solid result. What helped you keep moving?","I worked in the library.","A focused place can make things easier.","I still feel a bit behind.","Being behind does not erase the progress you made.","I will try again tomorrow.","That sounds like a realistic next step."],
+        ["Today was okay, just a lot of small tasks.","Small tasks can add up. Did any part feel easier than expected?","The lab went fine.","It is worth noticing what went smoothly.","I will try to build on that.","That sounds like a reasonable approach."],
+        ["I am busy but still alright.","It sounds like you are carrying a full schedule.","I slept around seven hours.","That rest may help you keep some balance.","Hopefully next week is calmer.","I hope you get some breathing room too."],
+        ["Assignments are starting to pile up.","That sounds difficult when several deadlines arrive together. What feels most urgent?","The group report.","Could you choose one small part of it to begin with?"],
+        ["Assignments are piling up. I keep starting things and not finishing them.","That sounds draining, like the pile keeps growing. What feels most urgent right now?","All of it honestly. I slept like 4 hours.","Four hours would leave anyone running on empty. Would it help to pick just one small task for tomorrow morning?"],
+        ["I am finding it hard to keep up.","That sounds exhausting. What would make tomorrow slightly easier?"],
+        ["I don't feel like going to class anymore.","That's a heavy feeling to carry. Has it been building for a few days, or did something happen?"],
+        ["Not much to say today.","That's okay. I'm here whenever you feel like talking. How did you sleep?"]
+      ]
+    },
+    "hamza@mindpulse.com": {
+      "sentiments": [0.3,0.32,0.28,0.35,0.3,0.34,0.31,-0.7,0.3,0.33],
+      "days": [
+        ["I had a normal day and got my reading done.","That sounds steady. What helped you stay on track?","I used the library.","A familiar place can make starting easier.","It worked well.","Good to hear."],
+        ["I had lunch with classmates.","That sounds pleasant. Did you enjoy the break?","Yes, we talked about films.","A relaxed conversation can be a nice reset.","It was fun.","I am glad."],
+        ["My tutorial went better than expected.","That is encouraging. What went well?","I answered a question.","You can be proud of taking that chance.","I felt more confident.","That is a useful feeling to remember."],
+        ["I am okay today.","Thanks for checking in. What has your day been like?","Mostly studying and walking.","That sounds like a balanced rhythm.","Nothing dramatic.","Quiet days count too."],
+        ["I finished a small project task.","Nice work. How did it feel to finish it?","Relieving.","That sense of completion can help with the next task.","I will continue tomorrow.","Sounds good."],
+        ["The week is going smoothly.","That is good to hear. What is helping?","My timetable is clear.","A clear timetable can reduce decisions during the day.","Yes, it helps.","Keep noticing what supports you."],
+        ["I met a friend after class.","That sounds like a good way to unwind.","We got snacks.","Small social breaks can be refreshing.","It was simple but nice.","Those moments matter."],
+        ["The presentation went terribly. I froze in front of everyone.","That sounds really uncomfortable. What was going through your mind when it happened?","I just blanked out. I feel so embarrassed.","That kind of moment can feel huge right after it happens. Be gentle with yourself tonight.","I keep replaying it.","It may soften with time and a little distance.","I will try to rest before thinking about it again.","That sounds like a gentle next step."],
+        ["Better today. I talked to my friend about it and it feels less awful.","I'm glad you talked to them. What helped most?","They listened without judging.","Being heard can make a hard experience feel less lonely.","Yes, I feel calmer.","That sounds like a meaningful recovery step."],
+        ["Today was ordinary and okay.","Ordinary can be welcome after a difficult day. How are you feeling now?","More settled.","I am glad things feel steadier.","Me too.","Take the evening gently." ]
+      ]
+    },
+    "sana@mindpulse.com": {
+      "sentiments": [-0.02,-0.05,-0.08,-0.03],
+      "days": [
+        [],
+        ["Hi. I have been busy this week.","No worries. How has the week been going?"],
+        [],
+        [],
+        ["Hi. Kal check-in nahi kar saki, busy thi.","No worries at all. How has your week been going?"],
+        [],[],[],
+        ["Just checking in after a long day.","It is good to hear from you. What would feel helpful right now?"],
+        ["I am okay, just quiet today.","That is okay. You can share as much or as little as feels right."]
+      ]
+    },
+    "zainab@mindpulse.com": {
+      "sentiments": [-0.25,-0.22,-0.28,-0.24,-0.26,-0.23,-0.27,-0.25,-0.24,-0.26],
+      "days": [
+        ["Deadlines everywhere, but this is normal for me during semester.","Sounds like you know your own rhythm. What helps you cope when it gets intense?","A strict study schedule. I always get stressed like this and manage.","That structure seems important for you. What part of it works best?","The fixed start time.","A reliable start can make pressure feel more organized."],
+        ["Busy day, but my plan held up.","It sounds like your routine gave the day some shape.","Yes, I followed it closely.","That consistency is a strength.","I know what usually works.","That self-knowledge is useful."],
+        ["The workload is high again.","That sounds intense, even when it is familiar.","I took short breaks.","Good pacing can help you sustain effort.","It kept me going.","I am glad you found a workable rhythm."],
+        ["I am stressed but not surprised by it.","You seem familiar with this pattern. What helps you recover?","A walk and a shower.","Those simple transitions can help the day change gear.","They usually do.","Keep making room for them."],
+        ["Another full schedule today.","That is a lot to hold. How did you manage the priorities?","I did the hardest task first.","That is a clear strategy for a demanding day.","It worked.","Good to hear."],
+        ["Deadlines are close but I am on track.","It sounds like your planning is helping.","I checked everything twice.","Preparation can make pressure feel more predictable.","Exactly.","You know your process well."],
+        ["I feel tense, but this is normal for me.","Normal does not mean easy. What helps you stay grounded?","Tea and a written plan.","That sounds like a practical combination.","It keeps me steady.","I am glad it supports you."],
+        ["Lots of work again today.","That sounds demanding. Did you get any proper pauses?","A couple of short ones.","Even brief pauses are worth protecting.","I will keep doing that.","That sounds sensible."],
+        ["The semester pressure is still high.","You are carrying it steadily. What helps you avoid running on empty?","I stop at a set time.","A stopping point can protect your recovery time.","It helps me sleep.","That boundary sounds valuable."],
+        ["High workload, same as usual, but I managed.","You handled another intense day with your usual structure.","Yes, I know my rhythm.","That awareness can help you choose support when you need it.","I will remember that.","Good." ]
+      ]
+    }
+  }
+}

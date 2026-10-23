@@ -43,6 +43,7 @@ async def register_user(db: AsyncIOMotorDatabase, data: UserRegister) -> dict:
             "university_id": data.university_id,
             "program": data.program,
             "semester": data.semester,
+            "is_fast_student": data.is_fast_student,
             "created_at": datetime.now(timezone.utc),
         })
 

@@ -34,6 +34,8 @@ class Settings(BaseSettings):
     gemini_chat_model: str = "gemini-2.5-flash"
     chat_rate_limit_per_minute: int = 20
     chat_rate_limit_per_day: int = 300
+    delivery_mode: Literal["outbox_only"] = "outbox_only"
+    university_psychologist_email: str = "psychologist@gmail.com"
 
     # --- Sentiment analysis (Phase 6) ---
     # Set SENTIMENT_ENABLED=false to skip the local model entirely

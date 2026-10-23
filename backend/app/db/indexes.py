@@ -20,6 +20,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 async def create_indexes(db: AsyncIOMotorDatabase) -> None:
     await db.users.create_index("email", unique=True)
     await db.consents.create_index("student_id", unique=True)
+    await db.alert_deliveries.create_index([("student_id", 1), ("created_at", -1)])
 
     await db.behavioral_signals.create_index([("student_id", 1), ("date", -1)])
     await db.sentiment_results.create_index([("student_id", 1), ("date", -1)])

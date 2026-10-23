@@ -21,6 +21,7 @@ from app.dashboards.schemas import (
     AuditEventOut,
     ParentStudentSummary,
     RiskConfiguration,
+    StudentAlertDeliveryOut,
 )
 from app.dashboards.service import get_admin_overview, get_parent_summaries
 from app.db.mongodb import get_database
@@ -50,6 +51,17 @@ async def read_linked_student_summaries(
     db: AsyncIOMotorDatabase = Depends(get_database),
 ):
     return await get_parent_summaries(db, parent)
+
+
+@router.get("/student/alerts", response_model=list[StudentAlertDeliveryOut])
+async def read_student_alert_deliveries(
+    student: dict = Depends(require_role(["student"])),
+    db: AsyncIOMotorDatabase = Depends(get_database),
+):
+    return await db.alert_deliveries.find(
+        {"student_id": student["_id"]},
+        {"_id": 0, "channel": 1, "recipient": 1, "message_text": 1, "status": 1, "created_at": 1},
+    ).sort("created_at", -1).to_list(length=50)
 
 
 @router.get("/counselor/escalations", response_model=list[EscalationOut])

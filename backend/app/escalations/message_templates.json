@@ -1,0 +1,5 @@
+{
+  "version": 1,
+  "parent": "Assalam o Alaikum. This is MindPulse. {first_name} chose to let us tell you when they might need extra support. Their recent check-ins suggest a stressful stretch. Please check in with them kindly. This is not a diagnosis, and the details of their conversations stay private.",
+  "psychologist": "MindPulse alert: {student_name} ({email}) has shown sustained elevated stress indicators for {days} consecutive days and consented to share this with university support. Summary-level only. Please follow your counselling protocol."
+}

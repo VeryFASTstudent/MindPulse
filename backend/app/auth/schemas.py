@@ -29,6 +29,7 @@ class UserRegister(BaseModel):
     university_id: str | None = None
     program: str | None = None
     semester: int | None = None
+    is_fast_student: bool = False
 
 
 class UserLogin(BaseModel):
@@ -43,6 +44,7 @@ class UserOut(BaseModel):
     role: UserRole
     is_active: bool
     created_at: datetime
+    is_fast_student: bool = False
 
     model_config = {"populate_by_name": True}
 

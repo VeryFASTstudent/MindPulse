@@ -1,4 +1,6 @@
 from datetime import date, datetime, timezone
+import json
+from pathlib import Path
 from typing import Any
 
 from bson import ObjectId
@@ -7,11 +9,15 @@ from pymongo.errors import DuplicateKeyError
 
 from app.core.exceptions import ForbiddenError, NotFoundError, ValidationFailedError
 from app.escalations.schemas import EscalationStatus
+from app.core.config import settings
 
 ESCALATION_SUMMARY = (
     "A sustained high well-being pattern has been observed. Please follow up "
     "through the approved support process. No chat content or raw scores are shared."
 )
+_TEMPLATE_PATH = Path(__file__).with_name("message_templates.json")
+with _TEMPLATE_PATH.open(encoding="utf-8") as template_file:
+    MESSAGE_TEMPLATES = json.load(template_file)
 ALLOWED_STATUS_TRANSITIONS = {
     EscalationStatus.new.value: {EscalationStatus.acknowledged.value},
     EscalationStatus.acknowledged.value: {EscalationStatus.closed.value},
@@ -31,6 +37,12 @@ async def create_sustained_escalations(
     consent = await db.consents.find_one({"student_id": student_id})
     if consent is None:
         return False
+
+    if settings.delivery_mode != "outbox_only":
+        raise RuntimeError("External alert delivery is disabled unless DELIVERY_MODE=outbox_only")
+
+    student = await db.users.find_one({"_id": student_id}, {"full_name": 1, "email": 1})
+    student = student or {"full_name": "Student", "email": ""}
 
     recipients: list[tuple[str, ObjectId]] = []
     if consent.get("share_with_university_support", False):
@@ -90,6 +102,45 @@ async def create_sustained_escalations(
             continue
 
         has_notifications = True
+        delivery_collection = getattr(db, "alert_deliveries", None)
+        if recipient_role == "counselor":
+            delivery = {
+                "alert_id": result.upserted_id,
+                "student_id": student_id,
+                "channel": "email",
+                "recipient": settings.university_psychologist_email,
+                "message_text": MESSAGE_TEMPLATES["psychologist"].format(
+                    student_name=student.get("full_name", "Student"),
+                    email=student.get("email", ""),
+                    days=consecutive_days,
+                ),
+                "status": "queued",
+                "created_at": now,
+            }
+            if delivery_collection is not None:
+                await delivery_collection.update_one(
+                    {"alert_id": result.upserted_id, "channel": "email"},
+                    {"$setOnInsert": delivery},
+                    upsert=True,
+                )
+        elif recipient_role == "parent" and consent.get("parent_phone"):
+            delivery = {
+                "alert_id": result.upserted_id,
+                "student_id": student_id,
+                "channel": "whatsapp",
+                "recipient": consent["parent_phone"],
+                "message_text": MESSAGE_TEMPLATES["parent"].format(
+                    first_name=student.get("full_name", "Student").split()[0]
+                ),
+                "status": "queued",
+                "created_at": now,
+            }
+            if delivery_collection is not None:
+                await delivery_collection.update_one(
+                    {"alert_id": result.upserted_id, "channel": "whatsapp"},
+                    {"$setOnInsert": delivery},
+                    upsert=True,
+                )
         await db.audit_logs.insert_one(
             {
                 "actor_type": "system",

@@ -26,6 +26,14 @@ class AdminOverview(BaseModel):
     message: str
 
 
+class StudentAlertDeliveryOut(BaseModel):
+    channel: Literal["email", "whatsapp"]
+    recipient: str
+    message_text: str
+    status: str
+    created_at: datetime
+
+
 class AdminUserOut(BaseModel):
     id: PyObjectId = Field(alias="_id")
     full_name: str
